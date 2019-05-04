@@ -29,7 +29,6 @@ public class GameUtil {
         BufferedImage bi = null;
         try {
             URL u = GameUtil.class.getClassLoader().getResource(path);
-            System.out.println("u是：" + u + " 路径：" + path);
             bi = ImageIO.read(u);
         } catch (IOException e) {
             e.printStackTrace();

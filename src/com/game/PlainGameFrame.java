@@ -2,6 +2,8 @@ package com.game;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -20,7 +22,12 @@ public class PlainGameFrame extends JFrame {
      * @auther:
      * @date:
      */
-    Image ball = GameUtil.getImage("/images/ball.png");
+    Image planeImg = GameUtil.getImage("images/plane.png");
+    Image bg = GameUtil.getImage("images/bg.jpg");
+
+    int planeX = 250, planeY = 250;
+
+    Plane plane = new Plane(planeImg, planeX, planeY);
 
     /**
      * 初始化窗口
@@ -43,18 +50,59 @@ public class PlainGameFrame extends JFrame {
                 System.exit(0);
             }
         });
+        // 启动重绘线程
+        new PaintThread().start();
+        // 监听键盘事件
+        addKeyListener(new KeyMonitor());
     }
 
     /**
-     * 功能描述: 自动被调用的方法
+     * 功能描述: 自动被调用的方法，不是用户自己调用的（钩子）
      * @param:
      * @return:
      * @auther:
      * @date:
      */
+    @Override
     public void paint(Graphics g) {
-        g.drawRect(100, 100, 300, 300);
-        g.drawImage(ball, 250, 250, null);
+        g.drawImage(bg, 0, 0, null);
+        plane.drawSelf(g);
+    }
+
+    /**
+     * 功能描述: 反复重绘
+     * @param:
+     * @return:
+     * @auther:
+     * @date:
+     */
+    class PaintThread extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                // 重绘窗口
+                repaint();
+
+                try {
+                    //
+                    Thread.sleep(40);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    class KeyMonitor extends KeyAdapter {
+        @Override
+        public void keyPressed(KeyEvent e) {
+            plane.addDirection(e);
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            plane.minusDirection(e);
+        }
     }
 
     public static void main(String[] args) {
