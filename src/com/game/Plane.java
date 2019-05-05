@@ -12,29 +12,35 @@ import java.awt.event.KeyEvent;
 public class Plane extends GameObject {
     int speed = 5;
     boolean left, right, up, down;
+    // 飞机是否存活
+    boolean live = true;
 
-    public  void  drawSelf(Graphics  g){
-        g.drawImage(img, (int)x,(int) y, null);
+    public void drawSelf(Graphics  g){
+        if(live) {
+            g.drawImage(img, (int)x,(int) y, null);
 
-        // 根据鼠标按键绘制坐标
-        if(left){
-            x -= speed;
-        }
-        if(right){
-            x += speed;
-        }
-        if(up){
-            y -= speed;
-        }
-        if(down){
-            y += speed;
+            // 根据鼠标按键绘制坐标
+            if(left) {
+                x -= speed;
+            }
+            if(right) {
+                x += speed;
+            }
+            if(up) {
+                y -= speed;
+            }
+            if(down) {
+                y += speed;
+            }
         }
     }
 
-    public  Plane(Image  img, double x, double y) {
+    public Plane(Image  img, double x, double y) {
         this.img = img;
         this.x = x;
         this.y = y;
+        this.width = img.getWidth(null) ;
+        this.height = img.getHeight(null);
     }
 
     public void addDirection(KeyEvent e) {
@@ -54,7 +60,7 @@ public class Plane extends GameObject {
         }
     }
 
-    public  void   minusDirection(KeyEvent  e){
+    public void minusDirection(KeyEvent  e){
         switch (e.getKeyCode()) {
             case KeyEvent.VK_LEFT:
                 left = false;

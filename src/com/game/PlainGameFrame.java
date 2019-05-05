@@ -6,6 +6,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Date;
 
 /**
  * @Auther: yangguoqiang01
@@ -25,9 +26,13 @@ public class PlainGameFrame extends JFrame {
     Image planeImg = GameUtil.getImage("images/plane.png");
     Image bg = GameUtil.getImage("images/bg.jpg");
 
-    int planeX = 250, planeY = 250;
+    Plane plane = new Plane(planeImg, Constant.PLANE_X, Constant.PLANE_Y);
+    Shell[] shells = new Shell[20];
 
-    Plane plane = new Plane(planeImg, planeX, planeY);
+    Explode explode;
+    Date startTime = new Date();
+    Date endTime;
+    int period;
 
     /**
      * 初始化窗口
@@ -38,7 +43,7 @@ public class PlainGameFrame extends JFrame {
         // 显示窗口
         this.setVisible(true);
         // 设置窗口大小
-        this.setSize(500, 500);
+        this.setSize(Constant.GAME_WIDTH, Constant.GAME_HEIGHT);
         // 设置窗口的起始位置
         this.setLocation(0, 0);
 
@@ -54,6 +59,10 @@ public class PlainGameFrame extends JFrame {
         new PaintThread().start();
         // 监听键盘事件
         addKeyListener(new KeyMonitor());
+        // 绘制50个炮弹
+        for(int i = 0; i < shells.length; i++) {
+            shells[i] = new Shell();
+        }
     }
 
     /**
@@ -65,8 +74,47 @@ public class PlainGameFrame extends JFrame {
      */
     @Override
     public void paint(Graphics g) {
+        // 保存最初的画笔颜色
+        Color c = g.getColor();
+
+        // 绘制背景图
         g.drawImage(bg, 0, 0, null);
+
+        // 绘制飞机
         plane.drawSelf(g);
+
+
+        for(Shell shell : shells) {
+            // 绘制炮弹
+            if(shell != null) {
+                shell.draw(g);
+
+                // 炮弹碰到飞机(边界重叠) 飞机挂掉
+                boolean isHit = shell.getRect().intersects(plane.getRect());
+
+                if(isHit && plane.live) {
+                    plane.live = false;
+                    // 如果爆炸对象不存在，则创建
+                    if(explode == null) {
+                        explode = new Explode(plane.x, plane.y);
+                        endTime = new Date();
+                        period = (int)((endTime.getTime() - startTime.getTime()) / 1000);
+                    }
+                    explode.draw(g);
+                }
+
+                // 如果飞机挂了
+                if(!plane.live) {
+                    g.setColor(Color.red);
+                    Font f = new Font("宋体", Font.BOLD, 20);
+                    g.setFont(f);
+                    g.drawString("您一共生存了：" + period + "秒", Constant.FONT_X, Constant.FONT_Y);
+
+                }
+            }
+        }
+
+        g.setColor(c);
     }
 
     /**
@@ -84,7 +132,7 @@ public class PlainGameFrame extends JFrame {
                 repaint();
 
                 try {
-                    //
+                    // 间隔时间
                     Thread.sleep(40);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -108,5 +156,17 @@ public class PlainGameFrame extends JFrame {
     public static void main(String[] args) {
         PlainGameFrame f = new PlainGameFrame();
         f.launchFrame();
+    }
+
+    // 配置双缓冲 增加流畅度
+    private Image offScreenImage = null;
+
+    public void update(Graphics g) {
+        if(offScreenImage == null)
+            offScreenImage = this.createImage(Constant.GAME_WIDTH, Constant.GAME_HEIGHT);
+
+        Graphics gOff = offScreenImage.getGraphics();
+        paint(gOff);
+        g.drawImage(offScreenImage, 0, 0, null);
     }
 }
